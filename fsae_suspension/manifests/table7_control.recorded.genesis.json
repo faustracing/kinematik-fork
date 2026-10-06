@@ -1,0 +1,727 @@
+{
+  "schema": "kinematik.genesis.manifest/1",
+  "name": "table7_control",
+  "kinematik_version": "0.23.0",
+  "inputs_sha256": "a5c4712165acb1b3f6e2d9d284fa951fcd26387b27746841718b87f6a92d5e29",
+  "context": {
+    "paper": "table 7",
+    "axle": "rear",
+    "declared": "rear_final inputs; caster, KPI and scrub bounds kept; anti-squat and migration bounds varied",
+    "bounds_varied": []
+  },
+  "hardpoints": {
+    "upper_front_inner": [
+      -296.4,
+      333.4,
+      361.8
+    ],
+    "upper_rear_inner": [
+      -112.3,
+      206.4,
+      305.8
+    ],
+    "lower_front_inner": [
+      -264.2,
+      184.0,
+      97.9
+    ],
+    "lower_rear_inner": [
+      23.4,
+      85.0,
+      143.9
+    ],
+    "upper_outer": [
+      3.0,
+      546.0,
+      300.0
+    ],
+    "lower_outer": [
+      -5.0,
+      570.2,
+      140.0
+    ],
+    "tie_rod_inner": [
+      -40.7,
+      341.6,
+      146.3
+    ],
+    "tie_rod_outer": [
+      78.0,
+      564.2,
+      162.0
+    ],
+    "wheel_center": [
+      0.0,
+      600.0,
+      228.0
+    ],
+    "contact_patch": [
+      0.0,
+      605.0,
+      0.0
+    ],
+    "pushrod_outer": [
+      -5.0,
+      408.0,
+      120.0
+    ],
+    "rocker_pivot": [
+      -5.0,
+      360.0,
+      330.0
+    ],
+    "rocker_axis": [
+      1.0,
+      0.0,
+      0.0
+    ],
+    "rocker_pushrod": [
+      -5.0,
+      402.0,
+      308.0
+    ],
+    "rocker_spring": [
+      -5.0,
+      335.0,
+      360.0
+    ],
+    "spring_inner": [
+      -5.0,
+      196.7,
+      244.8
+    ],
+    "pushrod_attach": "lower",
+    "static_camber": -2.6,
+    "static_toe": 0.0
+  },
+  "targets": {
+    "track_mm": 1200.0,
+    "curves": [
+      {
+        "channel": "camber_deg",
+        "travel_mm": [
+          -25.0,
+          -12.5,
+          0.0,
+          12.5,
+          25.0
+        ],
+        "target": [
+          -1.9,
+          -2.25,
+          -2.6,
+          -2.95,
+          -3.3000000000000003
+        ],
+        "band": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ]
+      },
+      {
+        "channel": "toe_deg",
+        "travel_mm": [
+          -25.0,
+          -12.5,
+          0.0,
+          12.5,
+          25.0
+        ],
+        "target": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "band": [
+          0.08,
+          0.08,
+          0.08,
+          0.08,
+          0.08
+        ]
+      },
+      {
+        "channel": "rc_height_mm",
+        "travel_mm": [
+          -25.0,
+          -12.5,
+          0.0,
+          12.5,
+          25.0
+        ],
+        "target": [
+          38.0,
+          38.0,
+          38.0,
+          38.0,
+          38.0
+        ],
+        "band": [
+          18.0,
+          18.0,
+          18.0,
+          18.0,
+          18.0
+        ]
+      }
+    ]
+  },
+  "volume": {
+    "boxes": {
+      "lower_front_inner": {
+        "lo": [
+          -304.2,
+          144.0,
+          57.900000000000006
+        ],
+        "hi": [
+          -224.2,
+          224.0,
+          137.9
+        ]
+      },
+      "lower_rear_inner": {
+        "lo": [
+          -16.6,
+          45.0,
+          103.9
+        ],
+        "hi": [
+          63.4,
+          125.0,
+          183.9
+        ]
+      },
+      "tie_rod_inner": {
+        "lo": [
+          -80.7,
+          301.6,
+          106.30000000000001
+        ],
+        "hi": [
+          -0.7000000000000028,
+          381.6,
+          186.3
+        ]
+      },
+      "upper_front_inner": {
+        "lo": [
+          -336.4,
+          293.4,
+          321.8
+        ],
+        "hi": [
+          -256.4,
+          373.4,
+          401.8
+        ]
+      },
+      "upper_rear_inner": {
+        "lo": [
+          -152.3,
+          166.4,
+          265.8
+        ],
+        "hi": [
+          -72.3,
+          246.4,
+          345.8
+        ]
+      }
+    },
+    "keep_out": [],
+    "probe_radius_mm": 0.0,
+    "min_clearance_mm": 0.0,
+    "spacings": [],
+    "properties": {
+      "bounds": [
+        {
+          "prop": "caster_deg",
+          "lo": 0.0,
+          "hi": 8.0,
+          "label": "0 <= caster (deg) <= 8"
+        },
+        {
+          "prop": "kpi_deg",
+          "lo": 0.0,
+          "hi": 10.0,
+          "label": "0 <= kingpin inclination (deg) <= 10"
+        },
+        {
+          "prop": "scrub_static_mm",
+          "lo": -5.0,
+          "hi": 30.0,
+          "label": "-5 <= scrub radius, static (mm) <= 30"
+        }
+      ],
+      "cg_height_mm": 280.0,
+      "wheelbase_mm": 1630.0,
+      "track_mm": 1210.0,
+      "brake_bias_front": 0.6,
+      "drive_bias_rear": 1.0,
+      "travel_mm": [
+        -25.0,
+        25.0
+      ],
+      "n_nodes": 5
+    },
+    "wheel_envelope": {
+      "pickup_radius_mm": 115.0,
+      "rim_radius_mm": 127.0,
+      "tire_radius_mm": 228.0,
+      "rim_half_width_mm": 89.0,
+      "tire_half_width_mm": 95.0,
+      "wheel_offset_mm": 0.0,
+      "clearance_mm": 3.0,
+      "travel_mm": [
+        -25.0,
+        25.0
+      ],
+      "n_travel": 5,
+      "rack_travel_mm": 0.0,
+      "samples_per_link": 16,
+      "links": [
+        "upper_front",
+        "upper_rear",
+        "lower_front",
+        "lower_rear",
+        "tie_rod"
+      ],
+      "link_radius_mm": 7.94,
+      "rod_end_radius_mm": 11.0,
+      "tire_profile": [],
+      "joint_swing_limit_deg": null,
+      "sectors": []
+    }
+  },
+  "tolerance": {
+    "provenance": "shop preset 'jig_weld' \u2014 REPRESENTATIVE tolerances, not measured on your parts. Replace with inspection data before quoting these spreads as your build's real scatter.",
+    "calibrated": false,
+    "specs": {
+      "lower_front_inner": {
+        "lo": [
+          -0.5,
+          -0.5,
+          -0.5
+        ],
+        "hi": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "dist": "uniform"
+      },
+      "lower_outer": {
+        "lo": [
+          -0.15,
+          -0.15,
+          -0.15
+        ],
+        "hi": [
+          0.15,
+          0.15,
+          0.15
+        ],
+        "dist": "uniform"
+      },
+      "lower_rear_inner": {
+        "lo": [
+          -0.5,
+          -0.5,
+          -0.5
+        ],
+        "hi": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "dist": "uniform"
+      },
+      "tie_rod_inner": {
+        "lo": [
+          -0.15,
+          -0.15,
+          -0.15
+        ],
+        "hi": [
+          0.15,
+          0.15,
+          0.15
+        ],
+        "dist": "uniform"
+      },
+      "tie_rod_outer": {
+        "lo": [
+          -0.15,
+          -0.15,
+          -0.15
+        ],
+        "hi": [
+          0.15,
+          0.15,
+          0.15
+        ],
+        "dist": "uniform"
+      },
+      "upper_front_inner": {
+        "lo": [
+          -0.5,
+          -0.5,
+          -0.5
+        ],
+        "hi": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "dist": "uniform"
+      },
+      "upper_outer": {
+        "lo": [
+          -0.15,
+          -0.15,
+          -0.15
+        ],
+        "hi": [
+          0.15,
+          0.15,
+          0.15
+        ],
+        "dist": "uniform"
+      },
+      "upper_rear_inner": {
+        "lo": [
+          -0.5,
+          -0.5,
+          -0.5
+        ],
+        "hi": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "dist": "uniform"
+      }
+    }
+  },
+  "search": {
+    "seed": 0,
+    "n_starts": 6,
+    "n_yield": 2000,
+    "n_verify_full": 0,
+    "max_iter": 30,
+    "step_mm": 0.25,
+    "resilient_yield": 0.95,
+    "tempered_yield": 0.8,
+    "verify_agreement": 0.98
+  },
+  "recorded": {
+    "ok": true,
+    "reason": "Manufacturing-resilient geometry found: the best fit is also the most buildable (100.0% yield).",
+    "winner_hardpoints": {
+      "upper_front_inner": [
+        -296.4,
+        333.4,
+        361.8
+      ],
+      "upper_rear_inner": [
+        -112.3,
+        206.4,
+        305.8
+      ],
+      "lower_front_inner": [
+        -264.2,
+        184.0,
+        97.9
+      ],
+      "lower_rear_inner": [
+        23.4,
+        85.0,
+        143.9
+      ],
+      "upper_outer": [
+        3.0,
+        546.0,
+        300.0
+      ],
+      "lower_outer": [
+        -5.0,
+        570.2,
+        140.0
+      ],
+      "tie_rod_inner": [
+        -40.7,
+        341.6,
+        146.3
+      ],
+      "tie_rod_outer": [
+        78.0,
+        564.2,
+        162.0
+      ],
+      "wheel_center": [
+        0.0,
+        600.0,
+        228.0
+      ],
+      "contact_patch": [
+        0.0,
+        605.0,
+        0.0
+      ],
+      "pushrod_outer": [
+        -5.0,
+        408.0,
+        120.0
+      ],
+      "rocker_pivot": [
+        -5.0,
+        360.0,
+        330.0
+      ],
+      "rocker_axis": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "rocker_pushrod": [
+        -5.0,
+        402.0,
+        308.0
+      ],
+      "rocker_spring": [
+        -5.0,
+        335.0,
+        360.0
+      ],
+      "spring_inner": [
+        -5.0,
+        196.7,
+        244.8
+      ],
+      "pushrod_attach": "lower",
+      "static_camber": -2.6,
+      "static_toe": 0.0
+    },
+    "winner_verdict": "RESILIENT",
+    "winner_yield": 1.0,
+    "resilience_premium": 0.0,
+    "candidates": [
+      {
+        "hit": true,
+        "verdict": "RESILIENT",
+        "max_band_frac": 0.44385683501262374,
+        "worst_row": "camber (\u00b0) @ -25.0 mm",
+        "yield_frac": 1.0,
+        "iterations": 1,
+        "clamped": [],
+        "keepout_rejections": 0,
+        "shift_vec": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "hit": true,
+        "verdict": "RESILIENT",
+        "max_band_frac": 0.8569023725005565,
+        "worst_row": "camber (\u00b0) @ +25.0 mm",
+        "yield_frac": 1.0,
+        "iterations": 9,
+        "clamped": [
+          "lower_front_inner.y",
+          "lower_rear_inner.x",
+          "lower_rear_inner.y",
+          "tie_rod_inner.x",
+          "tie_rod_inner.y",
+          "upper_front_inner.x",
+          "upper_front_inner.y",
+          "upper_rear_inner.y"
+        ],
+        "keepout_rejections": 0,
+        "shift_vec": [
+          -37.152456374751786,
+          40.0,
+          36.076682867906385,
+          -40.0,
+          -40.0,
+          -7.2286455298688965,
+          -40.0,
+          -40.0,
+          16.176386307677646,
+          -40.0,
+          -40.0,
+          2.8673978522073704,
+          -32.752427703572984,
+          -40.0,
+          -8.105026897109257
+        ]
+      },
+      {
+        "hit": true,
+        "verdict": "TEMPERED",
+        "max_band_frac": 0.7923895931623306,
+        "worst_row": "toe (\u00b0) @ -25.0 mm",
+        "yield_frac": 0.86,
+        "iterations": 3,
+        "clamped": [
+          "lower_front_inner.x",
+          "lower_rear_inner.x",
+          "upper_front_inner.y",
+          "upper_rear_inner.y"
+        ],
+        "keepout_rejections": 0,
+        "shift_vec": [
+          -40.0,
+          -3.9652717763930365,
+          7.311104981236699,
+          -40.0,
+          -14.34126569321828,
+          -13.645304454408862,
+          15.188245155944266,
+          38.480776121392324,
+          9.905546117021057,
+          19.638422429833025,
+          -40.0,
+          38.15208111195857,
+          8.166782514007991,
+          -40.0,
+          2.8307299193971023
+        ]
+      },
+      {
+        "hit": false,
+        "verdict": "NO_FIT",
+        "max_band_frac": 2.5918614157387454,
+        "worst_row": "toe (\u00b0) @ +25.0 mm",
+        "yield_frac": null,
+        "iterations": 30,
+        "clamped": [
+          "upper_front_inner.x",
+          "upper_front_inner.y",
+          "upper_rear_inner.x"
+        ],
+        "keepout_rejections": 0,
+        "shift_vec": [
+          -1.938470091571017,
+          37.95139175715133,
+          -30.84025767432249,
+          -37.642250070712976,
+          9.892758796665635,
+          32.412953604933776,
+          14.237463895154763,
+          6.2153661052824845,
+          0.603130829702432,
+          40.0,
+          40.0,
+          -34.06930184822929,
+          40.0,
+          26.528357171110013,
+          22.567123334241295
+        ]
+      },
+      {
+        "hit": false,
+        "verdict": "NO_FIT",
+        "max_band_frac": 9.485930085547684,
+        "worst_row": "toe (\u00b0) @ -25.0 mm",
+        "yield_frac": null,
+        "iterations": 30,
+        "clamped": [
+          "lower_front_inner.x",
+          "lower_front_inner.y",
+          "tie_rod_inner.x",
+          "tie_rod_inner.y"
+        ],
+        "keepout_rejections": 0,
+        "shift_vec": [
+          40.0,
+          -40.0,
+          1.0230186556689425,
+          9.002263890803738,
+          -36.80685568010383,
+          12.338771605419101,
+          -40.0,
+          -40.0,
+          -27.501088944517395,
+          -32.251824707164324,
+          11.213434394259428,
+          -9.378642855083262,
+          35.00077899966925,
+          -36.417942985588496,
+          -30.415111806538537
+        ]
+      },
+      {
+        "hit": false,
+        "verdict": "NO_FIT",
+        "max_band_frac": 20.51393934038644,
+        "worst_row": "toe (\u00b0) @ -25.0 mm",
+        "yield_frac": null,
+        "iterations": 30,
+        "clamped": [
+          "lower_front_inner.x",
+          "lower_front_inner.y",
+          "lower_rear_inner.x",
+          "tie_rod_inner.x"
+        ],
+        "keepout_rejections": 0,
+        "shift_vec": [
+          40.0,
+          -40.0,
+          26.320572298716726,
+          -40.0,
+          17.911463622339053,
+          10.660865687844417,
+          -40.0,
+          -20.22664742876958,
+          -30.170987972611663,
+          14.523365424510402,
+          8.754209375739277,
+          30.7104464489746,
+          -32.472490512704944,
+          22.905618943623153,
+          -33.12116892089375
+        ]
+      }
+    ],
+    "coord_labels": [
+      "lower_front_inner.x",
+      "lower_front_inner.y",
+      "lower_front_inner.z",
+      "lower_rear_inner.x",
+      "lower_rear_inner.y",
+      "lower_rear_inner.z",
+      "tie_rod_inner.x",
+      "tie_rod_inner.y",
+      "tie_rod_inner.z",
+      "upper_front_inner.x",
+      "upper_front_inner.y",
+      "upper_front_inner.z",
+      "upper_rear_inner.x",
+      "upper_rear_inner.y",
+      "upper_rear_inner.z"
+    ],
+    "n_starts": 6,
+    "inputs_sha256": "a5c4712165acb1b3f6e2d9d284fa951fcd26387b27746841718b87f6a92d5e29",
+    "kinematik_version": "0.23.0"
+  }
+}

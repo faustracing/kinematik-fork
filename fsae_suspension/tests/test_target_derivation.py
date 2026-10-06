@@ -80,7 +80,7 @@ def test_roll_gradient_ceilings():
 
 
 def test_roll_centre_band_as_load_transfer():
-    assert 18.0 * td.share_per_mm_front_rc(V) == pytest.approx(0.0111, abs=0.0003)
+    assert 18.0 * td.share_per_mm_front_rc(V) == pytest.approx(0.0122, abs=0.0003)   # ±18 mm = ±1.2 points
 
 
 def test_balance_target_is_a_mild_understeer_margin():
