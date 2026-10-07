@@ -6,10 +6,10 @@ series and year, and optimise it against performance targets — on top of the
 [Suspension Explorer](https://github.com/faustracing/suspension-explorer-core)
 constraint solver.
 
-This is Phase 0: the package scaffold, the `Design` model, the coordinate frame
-adapter, the hardpoint importer, and the solver bridge. The Streamlit app, the
-3D viewport, the region algebra, the rules modules, and the optimizer land on
-top of this.
+Landed so far: the package scaffold, the `Design` model, the coordinate frame
+adapter, the hardpoint importer, the solver bridge, and DXF and report export.
+The Streamlit app, the 3D viewport, the region algebra, the rules modules, and
+the optimizer land on top of this.
 
 ## Status
 
@@ -18,6 +18,7 @@ top of this.
 | `workbench.core` | `Design` model, coordinate frames, documented defaults | Phase 0, landed |
 | `workbench.io` | Hardpoint CSV import with empirical frame verification | Phase 0, landed |
 | `workbench.solve` | `Design` to solver geometry, sweep templates, `SolveResult` | Phase 0, landed |
+| `workbench.export` | Per-axle DXF sketches, static metrics and sweep figures | Phase 5, landed |
 | `workbench.regions` | Region algebra: box, sphere, polytope, boolean composites | Phase 3 |
 | `workbench.rules` | FSAE rulesets keyed by `(series, year)` | Phase 3 |
 | `workbench.objectives` | Target bands and scoring | Phase 4 |
@@ -246,6 +247,21 @@ Sweep templates are `bump`, `droop`, `roll`, `steer`, and `combined`. All five
 hold the rack; on an unsteered axle the solver drops that hold, so `bump`,
 `droop`, and `roll` work unchanged on both axles. `steer` and `combined` drive
 the rack and are rejected early on an axle without one.
+
+```python
+from workbench.export import build_report, render_pdf, write_axle_dxfs
+
+write_axle_dxfs(design, "sketches")  # one DXF per axle
+
+report = build_report(design, {"front": result, "rear": solve(design, "rear", "bump")})
+render_pdf(report, "golden.pdf")  # needs the `report` extra (matplotlib)
+```
+
+DXF sketches are one axle per file, in ISO 8855 millimetres, with front, side,
+and top views laid out so they do not overlap. Front and rear are not drawn in
+one plan view: shifted onto a common origin, the two linkages collide. The
+report reads the solver's own keys. Anti-dive is `anti_dive` on the front axle
+result and anti-squat is `anti_squat` on the rear.
 
 Non-convergence does **not** raise. `solve` catches the solver's `RuntimeError`
 at the bridge boundary and returns `converged=False` with the failure as a

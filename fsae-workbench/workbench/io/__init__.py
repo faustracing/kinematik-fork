@@ -1,4 +1,4 @@
-"""Import and export adapters for external geometry formats.
+"""Hardpoint import adapters.
 
 Two ways in. `load_design` reads the canonical four-corner CSV layout, where
 the point names are already the project's own. `import_design` reads everything
