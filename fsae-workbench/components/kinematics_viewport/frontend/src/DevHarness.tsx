@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import { KinematicsViewport } from "./KinematicsViewport";
+import { normalizePayload } from "./payload";
 import { SAMPLE_PAYLOAD } from "./sampleDesign";
 import type { ViewportEvent, ViewportPayload } from "./types";
 import "./dev.css";
@@ -14,7 +15,11 @@ const MAX_LOG = 40;
  * into the payload the way `workbench` will once the solver has re-run.
  */
 export function DevHarness() {
-  const [payload, setPayload] = useState<ViewportPayload>(SAMPLE_PAYLOAD);
+  // Through the same normaliser the Streamlit path uses, so the harness
+  // exercises the real payload handling rather than a privileged shortcut.
+  const [payload, setPayload] = useState<ViewportPayload>(() =>
+    normalizePayload(SAMPLE_PAYLOAD),
+  );
   const [log, setLog] = useState<ViewportEvent[]>([]);
   const [applied, setApplied] = useState(0);
 

@@ -57,17 +57,24 @@ export function Nodes({
         const r = nodeRadius * (isSelected ? 1.45 : hovered === node.id ? 1.25 : 1);
         return (
           <group key={node.id} userData={{ nodeId: node.id }}>
+            {/* Generous invisible hit sphere: the visible markers are only a
+                few millimetres across at vehicle scale. */}
             <mesh
+              userData={{ nodeId: node.id }}
               onPointerOver={(e: ThreeEvent<PointerEvent>) => {
                 e.stopPropagation();
                 setHovered(node.id);
               }}
               onPointerOut={() => setHovered((h) => (h === node.id ? null : h))}
-              onPointerDown={(e: ThreeEvent<PointerEvent>) => {
+              onClick={(e: ThreeEvent<MouseEvent>) => {
                 e.stopPropagation();
                 onPick(node.id, e.shiftKey);
               }}
             >
+              <sphereGeometry args={[nodeRadius * 2.8, 12, 8]} />
+              <meshBasicMaterial visible={false} depthWrite={false} />
+            </mesh>
+            <mesh raycast={() => null}>
               {node.fixed ? (
                 <boxGeometry args={[r * 1.7, r * 1.7, r * 1.7]} />
               ) : (
@@ -82,7 +89,7 @@ export function Nodes({
               />
             </mesh>
             {severity && !isSelected && (
-              <mesh>
+              <mesh raycast={() => null}>
                 <sphereGeometry args={[r * 1.9, 16, 12]} />
                 <meshBasicMaterial
                   color={SEVERITY_COLOR[severity]}

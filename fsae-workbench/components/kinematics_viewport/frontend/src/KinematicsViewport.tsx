@@ -136,6 +136,19 @@ export function KinematicsViewport({ payload, height, onEvent }: KinematicsViewp
     return () => clearInterval(id);
   }, [playing, frames.length]);
 
+  // A gizmo handle release lands as a canvas "pointer missed", which would
+  // otherwise clear the selection the user is in the middle of editing.
+  const gizmoDragging = useRef(false);
+  const handleGizmoDragStateChange = useCallback((dragging: boolean) => {
+    if (dragging) {
+      gizmoDragging.current = true;
+      return;
+    }
+    setTimeout(() => {
+      gizmoDragging.current = false;
+    }, 150);
+  }, []);
+
   const refusalTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastRefusalKey = useRef("");
   const lastReadoutAt = useRef(0);
@@ -307,6 +320,11 @@ export function KinematicsViewport({ payload, height, onEvent }: KinematicsViewp
           dpr={[1, 2]}
           gl={{ antialias: true, preserveDrawingBuffer: true }}
           camera={{ fov: 42, near: 10, far: 200000, position: [2500, 2200, 1600] }}
+          onPointerMissed={() => {
+            if (gizmoDragging.current) return;
+            if (selectedRegionId) setSelectedRegionId(null);
+            else if (selectionRef.current.length) changeSelection([]);
+          }}
         >
           <Scene
             nodes={payload.nodes}
@@ -328,10 +346,7 @@ export function KinematicsViewport({ payload, height, onEvent }: KinematicsViewp
               setSelectedRegionId(id);
               setTool("select");
             }}
-            onPickEmpty={() => {
-              if (selectedRegionId) setSelectedRegionId(null);
-              else if (selection.length) changeSelection([]);
-            }}
+            onGizmoDragStateChange={handleGizmoDragStateChange}
             onDrawBoxAt={(p) => createBoxAt(p)}
             onNodeDragMove={handleNodeDragMove}
             onNodeDragEnd={handleNodeDragEnd}

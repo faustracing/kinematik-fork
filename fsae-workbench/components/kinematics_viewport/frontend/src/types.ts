@@ -40,27 +40,77 @@ export interface LinkPayload {
   kind?: LinkKind;
 }
 
+/** `[x, y, z, w]`. */
+export type Quat = [number, number, number, number];
+
+/** Triangle as indices into a polytope's `vertices`. */
+export type Tri = [number, number, number];
+
+export type RegionKind =
+  | "box"
+  | "obox"
+  | "sphere"
+  | "polytope"
+  | "union"
+  | "intersection"
+  | "difference";
+
 export interface BoxMesh {
+  type: "box";
   min: Vec3;
   max: Vec3;
 }
 
+/** Oriented box: half extents in its own frame, rotated by `quaternion`. */
+export interface OboxMesh {
+  type: "obox";
+  center: Vec3;
+  halfExtents: Vec3;
+  quaternion: Quat;
+}
+
 export interface SphereMesh {
+  type: "sphere";
   center: Vec3;
   radius: number;
 }
 
-export type RegionMesh = BoxMesh | SphereMesh;
+/** Closed triangulated surface. Faces index into `vertices`. */
+export interface PolytopeMesh {
+  type: "polytope";
+  vertices: Vec3[];
+  faces: Tri[];
+}
+
+export interface CompositeMesh {
+  type: "union" | "intersection" | "difference";
+  /** For `difference`, `children[0]` minus the rest. */
+  children: RegionMesh[];
+}
+
+export type RegionMesh =
+  | BoxMesh
+  | OboxMesh
+  | SphereMesh
+  | PolytopeMesh
+  | CompositeMesh;
 
 export interface RegionPayload {
   id: string;
-  kind: "box" | "sphere" | "polytope" | "union" | "intersection" | "difference";
+  kind: RegionKind;
   /** True = allowable volume, false = illegal/excluded. */
   allow: boolean;
   label?: string;
   /** `"user"` or `"rule:T.2.4"`. */
   source?: string;
   mesh?: RegionMesh;
+  /**
+   * Node-id globs naming the nodes this region binds, in `fnmatch` style
+   * (`*` and `?` match across `.`). Empty or absent means the region is not
+   * scoped by glob: an `allow=false` region then applies everywhere, and an
+   * `allow=true` region binds only through `Node.regionId`.
+   */
+  appliesTo?: string[];
 }
 
 export interface FindingPayload {
@@ -121,25 +171,21 @@ export const EMPTY_PAYLOAD: ViewportPayload = {
 };
 
 export function isBoxMesh(m: RegionMesh | undefined): m is BoxMesh {
-  return !!m && Array.isArray((m as BoxMesh).min) && Array.isArray((m as BoxMesh).max);
+  return m?.type === "box";
+}
+
+export function isOboxMesh(m: RegionMesh | undefined): m is OboxMesh {
+  return m?.type === "obox";
 }
 
 export function isSphereMesh(m: RegionMesh | undefined): m is SphereMesh {
-  return !!m && typeof (m as SphereMesh).radius === "number";
+  return m?.type === "sphere";
 }
 
-/** Fill in optional fields so the rest of the app can treat the payload as total. */
-export function normalizePayload(raw: Partial<ViewportPayload> | null | undefined): ViewportPayload {
-  if (!raw) return EMPTY_PAYLOAD;
-  return {
-    schemaVersion: raw.schemaVersion ?? 1,
-    nodes: raw.nodes ?? [],
-    links: raw.links ?? [],
-    regions: raw.regions ?? [],
-    findings: raw.findings ?? [],
-    frames: raw.frames ?? [],
-    selection: raw.selection ?? [],
-    view: raw.view,
-    frameUnit: raw.frameUnit,
-  };
+export function isPolytopeMesh(m: RegionMesh | undefined): m is PolytopeMesh {
+  return m?.type === "polytope";
+}
+
+export function isCompositeMesh(m: RegionMesh | undefined): m is CompositeMesh {
+  return m?.type === "union" || m?.type === "intersection" || m?.type === "difference";
 }

@@ -31,7 +31,7 @@ export interface SceneProps {
   editingLocked: boolean;
   onPickNode: (id: string, additive: boolean) => void;
   onPickRegion: (id: string) => void;
-  onPickEmpty: () => void;
+  onGizmoDragStateChange: (dragging: boolean) => void;
   onDrawBoxAt: (point: Vec3) => void;
   onNodeDragMove: (position: Vec3, refusedBy: string[]) => void;
   onNodeDragEnd: (nodeId: string, position: Vec3) => void;
@@ -56,7 +56,7 @@ export function Scene(props: SceneProps) {
     editingLocked,
     onPickNode,
     onPickRegion,
-    onPickEmpty,
+    onGizmoDragStateChange,
     onDrawBoxAt,
     onNodeDragMove,
     onNodeDragEnd,
@@ -64,7 +64,7 @@ export function Scene(props: SceneProps) {
   } = props;
 
   const nodeIds = new Set(nodes.map((n) => n.id));
-  const nodeRadius = Math.max(6, bounds.radius * 0.011);
+  const nodeRadius = Math.max(8, bounds.radius * 0.0135);
   const gizmoSize = 0.9;
 
   const gizmoNodeId =
@@ -72,10 +72,6 @@ export function Scene(props: SceneProps) {
       ? selection[0]
       : null;
   const gizmoNode = gizmoNodeId ? nodes.find((n) => n.id === gizmoNodeId) : undefined;
-  const allowRegion = gizmoNode?.regionId
-    ? regions.find((r) => r.id === gizmoNode.regionId && r.allow)
-    : undefined;
-  const denyRegions = regions.filter((r) => !r.allow);
 
   const editedRegion = selectedRegionId
     ? regions.find((r) => r.id === selectedRegionId)
@@ -100,22 +96,22 @@ export function Scene(props: SceneProps) {
 
       <GroundAndAxes bounds={bounds} />
 
-      {/* Click-through backdrop: clears selection, or places a new box in draw mode. */}
-      <mesh
-        position={[bounds.center[0], bounds.center[1], 0]}
-        visible={false}
-        onPointerDown={(e: ThreeEvent<PointerEvent>) => {
-          if (tool === "draw_box") {
+      {/* Ground pick target, only live in draw mode. It must not exist
+          otherwise: a full-scene backdrop swallows the pointer-down that
+          starts a transform-gizmo drag. */}
+      {tool === "draw_box" && (
+        <mesh
+          position={[bounds.center[0], bounds.center[1], 0]}
+          visible={false}
+          onClick={(e: ThreeEvent<MouseEvent>) => {
             e.stopPropagation();
             onDrawBoxAt([e.point.x, e.point.y, e.point.z]);
-          } else {
-            onPickEmpty();
-          }
-        }}
-      >
-        <planeGeometry args={[bounds.radius * 8, bounds.radius * 8]} />
-        <meshBasicMaterial />
-      </mesh>
+          }}
+        >
+          <planeGeometry args={[bounds.radius * 8, bounds.radius * 8]} />
+          <meshBasicMaterial />
+        </mesh>
+      )}
 
       <Regions
         regions={visibleRegions}
@@ -140,9 +136,10 @@ export function Scene(props: SceneProps) {
           key={gizmoNodeId}
           nodeId={gizmoNodeId}
           store={store}
-          allowRegion={allowRegion}
-          denyRegions={denyRegions}
+          nodeRegionId={gizmoNode?.regionId}
+          regions={regions}
           size={gizmoSize}
+          onDragStateChange={onGizmoDragStateChange}
           onDragMove={onNodeDragMove}
           onDragEnd={onNodeDragEnd}
         />
@@ -154,6 +151,7 @@ export function Scene(props: SceneProps) {
           region={editedRegion}
           mode={gizmoMode}
           size={gizmoSize}
+          onDragStateChange={onGizmoDragStateChange}
           onEditEnd={onRegionEditEnd}
         />
       )}

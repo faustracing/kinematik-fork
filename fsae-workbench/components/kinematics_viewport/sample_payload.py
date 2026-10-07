@@ -186,14 +186,45 @@ def _links() -> list[dict[str, str]]:
     return links
 
 
-def _box_around(p: Vec3, half: tuple[float, float, float]) -> dict[str, Vec3]:
+def _box_around(p: Vec3, half: tuple[float, float, float]) -> dict[str, Any]:
     return {
+        "type": "box",
         "min": [p[0] - half[0], p[1] - half[1], p[2] - half[2]],
         "max": [p[0] + half[0], p[1] + half[1], p[2] + half[2]],
     }
 
 
+def _wedge(center: Vec3, half: tuple[float, float, float]) -> dict[str, Any]:
+    """Axis-aligned wedge as a triangulated hull, to exercise the polytope path."""
+    cx, cy, cz = center
+    hx, hy, hz = half
+    return {
+        "type": "polytope",
+        "vertices": [
+            [cx - hx, cy - hy, cz - hz],
+            [cx + hx, cy - hy, cz - hz],
+            [cx + hx, cy + hy, cz - hz],
+            [cx - hx, cy + hy, cz - hz],
+            [cx - hx * 0.25, cy - hy * 0.35, cz + hz],
+            [cx + hx * 0.25, cy + hy * 0.35, cz + hz],
+        ],
+        "faces": [
+            [0, 2, 1],
+            [0, 3, 2],
+            [0, 1, 4],
+            [1, 5, 4],
+            [1, 2, 5],
+            [2, 3, 5],
+            [3, 4, 5],
+            [3, 0, 4],
+        ],
+    }
+
+
 def _regions() -> list[dict[str, Any]]:
+    uca_fore = _position("lf", "uca_fore_inboard")
+    uca_aft = _position("lf", "uca_aft_inboard")
+    rocker = _position("lr", "rocker_pivot")
     return [
         {
             "id": "r_lf_lca_fore",
@@ -201,15 +232,27 @@ def _regions() -> list[dict[str, Any]]:
             "allow": True,
             "label": "LF LCA fore pickup envelope",
             "source": "user",
+            "applies_to": ["lf.lca_fore_inboard"],
             "mesh": _box_around(_position("lf", "lca_fore_inboard"), (70, 55, 45)),
         },
         {
             "id": "r_lf_uca_fore",
-            "kind": "box",
+            "kind": "obox",
             "allow": True,
-            "label": "LF UCA fore pickup envelope",
+            "label": "LF UCA pickup envelope",
             "source": "user",
-            "mesh": _box_around(_position("lf", "uca_fore_inboard"), (60, 50, 60)),
+            "applies_to": ["lf.uca_*_inboard"],
+            "mesh": {
+                "type": "obox",
+                "center": [
+                    (uca_fore[0] + uca_aft[0]) / 2,
+                    uca_fore[1],
+                    (uca_fore[2] + uca_aft[2]) / 2,
+                ],
+                "half_extents": [160.0, 48.0, 58.0],
+                # Degrees, XYZ order, matching the contracts' angle convention.
+                "rotation": [0.0, -10.0, 14.0],
+            },
         },
         {
             "id": "r_lf_lca_outboard",
@@ -217,7 +260,27 @@ def _regions() -> list[dict[str, Any]]:
             "allow": True,
             "label": "LF LCA outboard upright envelope",
             "source": "user",
-            "mesh": {"center": _position("lf", "lca_outboard"), "radius": 55.0},
+            "applies_to": ["lf.lca_outboard"],
+            "mesh": {
+                "type": "sphere",
+                "center": _position("lf", "lca_outboard"),
+                "radius": 55.0,
+            },
+        },
+        {
+            "id": "r_lr_rocker_bay",
+            "kind": "difference",
+            "allow": True,
+            "label": "LR rocker bay minus airbox",
+            "source": "user",
+            "applies_to": ["lr.rocker_pivot", "rr.rocker_pivot"],
+            "mesh": {
+                "type": "difference",
+                "children": [
+                    _box_around(rocker, (150, 120, 95)),
+                    {"type": "sphere", "center": rocker, "radius": 46.0},
+                ],
+            },
         },
         {
             "id": "r_cockpit",
@@ -225,7 +288,7 @@ def _regions() -> list[dict[str, Any]]:
             "allow": False,
             "label": "Cockpit template exclusion",
             "source": "rule:T.2.4",
-            "mesh": {"min": [-260, -175, 60], "max": [320, 175, 520]},
+            "mesh": {"type": "box", "min": [-260, -175, 60], "max": [320, 175, 520]},
         },
         {
             "id": "r_ground",
@@ -233,7 +296,18 @@ def _regions() -> list[dict[str, Any]]:
             "allow": False,
             "label": "Minimum ground clearance",
             "source": "rule:T.2.5",
-            "mesh": {"min": [-900, -620, -40], "max": [900, 620, 28]},
+            # Outboard nodes sweep through this band by design; only
+            # chassis-side pickups are held above it.
+            "applies_to": ["*_inboard", "*.rocker_pivot", "*.damper_inboard"],
+            "mesh": {"type": "box", "min": [-900, -620, -40], "max": [900, 620, 28]},
+        },
+        {
+            "id": "r_driver_feet",
+            "kind": "polytope",
+            "allow": False,
+            "label": "Driver footwell exclusion",
+            "source": "rule:T.2.6",
+            "mesh": _wedge([520.0, 0.0, 190.0], (190, 150, 150)),
         },
     ]
 

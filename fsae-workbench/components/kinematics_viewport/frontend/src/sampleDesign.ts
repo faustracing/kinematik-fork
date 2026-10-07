@@ -9,11 +9,14 @@
  */
 
 import type {
+  BoxMesh,
   FindingPayload,
   FramePayload,
   LinkPayload,
   NodePayload,
+  PolytopeMesh,
   RegionPayload,
+  Tri,
   Vec3,
   ViewportPayload,
 } from "./types";
@@ -184,15 +187,43 @@ function buildLinks(): LinkPayload[] {
   return links;
 }
 
-function boxAround(p: Vec3, half: Vec3): { min: Vec3; max: Vec3 } {
+function boxAround(p: Vec3, half: Vec3): BoxMesh {
   return {
+    type: "box",
     min: [p[0] - half[0], p[1] - half[1], p[2] - half[2]],
     max: [p[0] + half[0], p[1] + half[1], p[2] + half[2]],
   };
 }
 
+/** Axis-aligned wedge, as a triangulated hull, to exercise the polytope path. */
+function wedge(center: Vec3, half: Vec3): PolytopeMesh {
+  const [cx, cy, cz] = center;
+  const [hx, hy, hz] = half;
+  const vertices: Vec3[] = [
+    [cx - hx, cy - hy, cz - hz],
+    [cx + hx, cy - hy, cz - hz],
+    [cx + hx, cy + hy, cz - hz],
+    [cx - hx, cy + hy, cz - hz],
+    [cx - hx * 0.25, cy - hy * 0.35, cz + hz],
+    [cx + hx * 0.25, cy + hy * 0.35, cz + hz],
+  ];
+  const faces: Tri[] = [
+    [0, 2, 1],
+    [0, 3, 2],
+    [0, 1, 4],
+    [1, 5, 4],
+    [1, 2, 5],
+    [2, 3, 5],
+    [3, 4, 5],
+    [3, 0, 4],
+  ];
+  return { type: "polytope", vertices, faces };
+}
+
 function buildRegions(): RegionPayload[] {
   const lf = CORNERS[0];
+  const ucaFore = cornerNodePosition(lf, "uca_fore_inboard");
+  const ucaAft = cornerNodePosition(lf, "uca_aft_inboard");
   return [
     {
       id: "r_lf_lca_fore",
@@ -200,15 +231,24 @@ function buildRegions(): RegionPayload[] {
       allow: true,
       label: "LF LCA fore pickup envelope",
       source: "user",
+      appliesTo: ["lf.lca_fore_inboard"],
       mesh: boxAround(cornerNodePosition(lf, "lca_fore_inboard"), [70, 55, 45]),
     },
     {
+      // An oriented box, canted to follow the upper-arm chassis rail.
       id: "r_lf_uca_fore",
-      kind: "box",
+      kind: "obox",
       allow: true,
       label: "LF UCA fore pickup envelope",
       source: "user",
-      mesh: boxAround(cornerNodePosition(lf, "uca_fore_inboard"), [60, 50, 60]),
+      appliesTo: ["lf.uca_*_inboard"],
+      mesh: {
+        type: "obox",
+        // Spans both upper-arm chassis pickups, canted to follow the rail.
+        center: [(ucaFore[0] + ucaAft[0]) / 2, ucaFore[1], (ucaFore[2] + ucaAft[2]) / 2],
+        halfExtents: [160, 48, 58],
+        quaternion: yawPitchQuat(14, -10),
+      },
     },
     {
       id: "r_lf_lca_outboard",
@@ -216,7 +256,28 @@ function buildRegions(): RegionPayload[] {
       allow: true,
       label: "LF LCA outboard upright envelope",
       source: "user",
-      mesh: { center: cornerNodePosition(lf, "lca_outboard"), radius: 55 },
+      appliesTo: ["lf.lca_outboard"],
+      mesh: { type: "sphere", center: cornerNodePosition(lf, "lca_outboard"), radius: 55 },
+    },
+    {
+      // Difference: the rocker may live in the bay, but not in the airbox.
+      id: "r_lr_rocker_bay",
+      kind: "difference",
+      allow: true,
+      label: "LR rocker bay minus airbox",
+      source: "user",
+      appliesTo: ["lr.rocker_pivot", "rr.rocker_pivot"],
+      mesh: {
+        type: "difference",
+        children: [
+          boxAround(cornerNodePosition(CORNERS[2], "rocker_pivot"), [150, 120, 95]),
+          {
+            type: "sphere",
+            center: cornerNodePosition(CORNERS[2], "rocker_pivot"),
+            radius: 46,
+          },
+        ],
+      },
     },
     {
       id: "r_cockpit",
@@ -224,7 +285,7 @@ function buildRegions(): RegionPayload[] {
       allow: false,
       label: "Cockpit template exclusion",
       source: "rule:T.2.4",
-      mesh: { min: [-260, -175, 60], max: [320, 175, 520] },
+      mesh: { type: "box", min: [-260, -175, 60], max: [320, 175, 520] },
     },
     {
       id: "r_ground",
@@ -232,9 +293,29 @@ function buildRegions(): RegionPayload[] {
       allow: false,
       label: "Minimum ground clearance",
       source: "rule:T.2.5",
-      mesh: { min: [-900, -620, -40], max: [900, 620, 28] },
+      // Outboard nodes sweep through this band by design; only chassis-side
+      // pickups are held above it.
+      appliesTo: ["*_inboard", "*.rocker_pivot", "*.damper_inboard"],
+      mesh: { type: "box", min: [-900, -620, -40], max: [900, 620, 28] },
+    },
+    {
+      id: "r_driver_feet",
+      kind: "polytope",
+      allow: false,
+      label: "Driver footwell exclusion",
+      source: "rule:T.2.6",
+      mesh: wedge([520, 0, 190], [190, 150, 150]),
     },
   ];
+}
+
+/** Degrees about Z then Y, matching the payload's XYZ-degrees convention. */
+function yawPitchQuat(yawDeg: number, pitchDeg: number): [number, number, number, number] {
+  const cy = Math.cos((yawDeg * Math.PI) / 360);
+  const sy = Math.sin((yawDeg * Math.PI) / 360);
+  const cp = Math.cos((pitchDeg * Math.PI) / 360);
+  const sp = Math.sin((pitchDeg * Math.PI) / 360);
+  return [sy * sp, cy * sp, sy * cp, cy * cp];
 }
 
 function buildFindings(): FindingPayload[] {

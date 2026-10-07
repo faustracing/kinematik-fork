@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Streamlit, type RenderData } from "streamlit-component-lib/dist/streamlit";
 import { KinematicsViewport } from "./KinematicsViewport";
-import { normalizePayload, type ViewportEvent, type ViewportPayload } from "./types";
+import { normalizePayload } from "./payload";
+import type { ViewportEvent, ViewportPayload } from "./types";
 
 interface Args {
   payload?: Partial<ViewportPayload>;

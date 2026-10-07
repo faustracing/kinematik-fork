@@ -21,7 +21,9 @@ kinematics_viewport/
     dev.html           # standalone dev harness, no Python needed
     src/
       types.ts             # payload / event contract
-      geometry.ts          # region containment, clamping, colours
+      payload.ts           # tolerant normalisation of what Python sends
+      geometry.ts          # vector helpers, colours
+      regionGeometry.ts    # containment, clamping, applies_to glob matching
       positionStore.ts     # mutable position source of truth for the scene
       useViewportEvents.ts # monotonic seq + debounced emits
       KinematicsViewport.tsx
@@ -37,6 +39,7 @@ kinematics_viewport/
 cd frontend
 npm install
 npm run build      # tsc --noEmit && vite build -> frontend/build/
+npm test           # vitest: region containment, clamping, glob scoping
 ```
 
 `frontend/build/` is gitignored; `__init__.py` raises a clear error if the
@@ -117,8 +120,48 @@ React state either.
 
 ## Payload and event shapes
 
-See `src/types.ts`. Node ids are `"{corner}.{node}"` or
-`"{axle}.center.{node}"`. Regions carry a `mesh` the client can render:
-`{min, max}` for boxes, `{center, radius}` for spheres. Region kinds without a
-client mesh (polytopes, composites) are skipped client-side and left entirely
-to server validation.
+See `src/types.ts` for the contract and `src/payload.ts` for the normaliser.
+Node ids are `"{corner}.{node}"` or `"{axle}.center.{node}"`.
+
+### Region meshes
+
+Every `mesh` carries a `type` discriminator:
+
+| `type` | Fields | Rendered as | Resizable in-scene |
+| --- | --- | --- | --- |
+| `box` | `min`, `max` | axis-aligned box | yes |
+| `obox` | `center`, `halfExtents`, rotation | oriented box | yes |
+| `sphere` | `center`, `radius` | sphere | yes |
+| `polytope` | `vertices`, `faces` | triangulated hull | no, translate only |
+| `union` / `intersection` / `difference` | `children` | children overlaid; subtracted operands of a `difference` drawn hollow | no, translate only |
+
+Normalisation is deliberately forgiving, because the Python side is snake_case
+and this payload is camelCase: `applies_to`/`appliesTo` and
+`half_extents`/`halfExtents` are both accepted and the result is always
+camelCase. Oriented-box rotation is read from `quaternion` (`[x, y, z, w]`), an
+`axes` basis, or `rotation` as XYZ Euler **degrees**, matching the contracts'
+degrees-at-every-boundary rule. Polygonal `faces` are fan-triangulated, and a
+mesh that cannot be understood becomes `undefined` rather than throwing — the
+region is simply not drawn or clamped against, and the server still validates
+it.
+
+Composite rendering is an approximation: children are overlaid rather than run
+through real CSG. Containment and clamping use the exact algebra in
+`regionGeometry.ts`, so only the picture is approximate. Polytope containment
+is ray-parity (concave hulls work) and clamping is nearest-surface projection.
+
+### `applies_to` scoping
+
+`applies_to` is a list of node-id globs with `fnmatch` semantics — `*` and `?`
+match across the `.` separator, `[...]` classes pass through, and `**` is
+accepted as a synonym for `*`. A drag is clamped only against regions that bind
+the node being dragged:
+
+- `applies_to` present and non-empty: it decides, for allowable and illegal
+  regions alike.
+- absent or empty: an `allow=false` region applies to every node (the old
+  behaviour), and an `allow=true` region binds only through the node's own
+  `regionId`.
+
+Getting this wrong refuses legal moves, so when in doubt the client clamps
+less, not more.
