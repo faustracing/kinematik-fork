@@ -103,7 +103,14 @@ React state either.
 ## Interactions
 
 - **View presets** — `iso`, `front`, `side`, `top`. `top` uses +X as screen-up so
-  the nose points up the page.
+  the nose points up the page. The camera frames the vehicle bounding box
+  (not a bounding sphere), so the default iso view sits close enough to read
+  the wishbones.
+- **Volume toggles** in the legend show or hide allowable and illegal regions.
+  Illegal exclusion volumes are hidden by default — a cockpit template and a
+  ground-clearance slab otherwise paint over the car. A region that refuses a
+  drag is drawn anyway, in yellow, for as long as the pointer is held against
+  the wall.
 - **Select** a node to get a translate gizmo. The drag is clamped client-side
   against the node's bound `allow=true` region and pushed out of every
   `allow=false` region; a refused boundary flashes yellow. The server
@@ -112,9 +119,9 @@ React state either.
   or around the selected node with *Box on node*. The new box is selected in
   resize mode so you can drag the handles immediately.
 - **Move / Resize** switch the region gizmo between translate and scale.
-- `allow=false` regions render as translucent red volumes; nodes carrying
-  findings are tinted and haloed by severity, and the findings list selects the
-  implicated node on click.
+- `allow=false` regions render as translucent red volumes when the illegal
+  toggle is on; nodes carrying findings are tinted and haloed by severity, and
+  the findings list selects the implicated node on click.
 - **Commit to solver** flushes all uncommitted node moves and region edits in
   one event; **Discard** throws them away locally.
 

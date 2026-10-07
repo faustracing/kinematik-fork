@@ -42,6 +42,7 @@ body,
 .kv-overlay {
   position: absolute;
   inset: 0;
+  z-index: 2;
   pointer-events: none;
   display: flex;
   flex-direction: column;
@@ -136,7 +137,8 @@ body,
 
 .kv-side {
   position: absolute;
-  top: 56px;
+  z-index: 1;
+  top: 64px;
   right: 10px;
   width: 248px;
   max-height: calc(100% - 136px);
@@ -286,6 +288,31 @@ body,
   height: 9px;
   border-radius: 2px;
   display: inline-block;
+}
+
+.kv-toggle {
+  appearance: none;
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  border-radius: 5px;
+  padding: 2px 6px;
+}
+
+.kv-toggle.is-on {
+  background: rgba(148, 163, 184, 0.16);
+  color: var(--kv-text);
+}
+
+.kv-toggle.is-off {
+  opacity: 0.45;
+}
+
+.kv-toggle.is-off i {
+  outline: 1px dashed rgba(148, 163, 184, 0.7);
+  outline-offset: 1px;
 }
 
 .kv-hint {

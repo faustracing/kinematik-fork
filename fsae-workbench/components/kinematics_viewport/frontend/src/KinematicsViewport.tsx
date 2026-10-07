@@ -51,6 +51,8 @@ export function KinematicsViewport({ payload, height, onEvent }: KinematicsViewp
   const [frameIndex, setFrameIndex] = useState<number | null>(null);
   const [playing, setPlaying] = useState(false);
   const [refusedRegions, setRefusedRegions] = useState<Set<string>>(new Set());
+  const [showAllowable, setShowAllowable] = useState(true);
+  const [showIllegal, setShowIllegal] = useState(false);
   const [dragReadout, setDragReadout] = useState<Vec3 | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
@@ -153,18 +155,33 @@ export function KinematicsViewport({ payload, height, onEvent }: KinematicsViewp
   const lastRefusalKey = useRef("");
   const lastReadoutAt = useRef(0);
 
+  // Stay yellow for the whole time a drag is pressed against a wall. The
+  // previous timer started on the first refused sample and expired mid-drag,
+  // so a slow pull to the face flashed and then went quiet.
   const showRefusal = useCallback((ids: string[]) => {
-    const key = ids.join("|");
-    if (key === lastRefusalKey.current) return;
-    lastRefusalKey.current = key;
-    setRefusedRegions(new Set(ids));
-    if (refusalTimer.current) clearTimeout(refusalTimer.current);
     if (ids.length > 0) {
-      refusalTimer.current = setTimeout(() => {
-        lastRefusalKey.current = "";
-        setRefusedRegions(new Set());
-      }, REFUSAL_HOLD_MS);
+      const key = ids.join("|");
+      if (refusalTimer.current) {
+        clearTimeout(refusalTimer.current);
+        refusalTimer.current = null;
+      }
+      if (key === lastRefusalKey.current) return;
+      lastRefusalKey.current = key;
+      setRefusedRegions(new Set(ids));
+      return;
     }
+    if (lastRefusalKey.current === "" || refusalTimer.current) return;
+    lastRefusalKey.current = "";
+    refusalTimer.current = setTimeout(() => {
+      refusalTimer.current = null;
+      setRefusedRegions(new Set());
+    }, REFUSAL_HOLD_MS);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (refusalTimer.current) clearTimeout(refusalTimer.current);
+    };
   }, []);
 
   const handleNodeDragMove = useCallback(
@@ -183,6 +200,7 @@ export function KinematicsViewport({ payload, height, onEvent }: KinematicsViewp
   const handleNodeDragEnd = useCallback(
     (nodeId: string, position: Vec3) => {
       setDragReadout(null);
+      showRefusal([]);
       const next = { ...localMovesRef.current, [nodeId]: round3(position) };
       localMovesRef.current = next;
       setLocalMoves(next);
@@ -192,7 +210,7 @@ export function KinematicsViewport({ payload, height, onEvent }: KinematicsViewp
         debounceMs: NODE_MOVE_DEBOUNCE_MS,
       });
     },
-    [emit],
+    [emit, showRefusal],
   );
 
   const handleRegionEditEnd = useCallback(
@@ -319,7 +337,7 @@ export function KinematicsViewport({ payload, height, onEvent }: KinematicsViewp
         <Canvas
           dpr={[1, 2]}
           gl={{ antialias: true, preserveDrawingBuffer: true }}
-          camera={{ fov: 42, near: 10, far: 200000, position: [2500, 2200, 1600] }}
+          camera={{ fov: 42, near: 8, far: 80000, position: [1400, 1200, 880] }}
           onPointerMissed={() => {
             if (gizmoDragging.current) return;
             if (selectedRegionId) setSelectedRegionId(null);
@@ -338,6 +356,8 @@ export function KinematicsViewport({ payload, height, onEvent }: KinematicsViewp
             selectedRegionId={selectedRegionId}
             severityByNode={severityByNode}
             refusedRegions={refusedRegions}
+            showAllowable={showAllowable}
+            showIllegal={showIllegal}
             tool={tool}
             gizmoMode={gizmoMode}
             editingLocked={animating}
@@ -472,12 +492,25 @@ export function KinematicsViewport({ payload, height, onEvent }: KinematicsViewp
           </div>
 
           <div className="kv-legend">
-            <span className="kv-swatch">
+            <span className="kv-group-label">Volumes</span>
+            <button
+              type="button"
+              className={`kv-swatch kv-toggle ${showAllowable ? "is-on" : "is-off"}`}
+              aria-pressed={showAllowable}
+              title="Show or hide allowable regions"
+              onClick={() => setShowAllowable((v) => !v)}
+            >
               <i style={{ background: "#22d3ee" }} /> allowable
-            </span>
-            <span className="kv-swatch">
+            </button>
+            <button
+              type="button"
+              className={`kv-swatch kv-toggle ${showIllegal ? "is-on" : "is-off"}`}
+              aria-pressed={showIllegal}
+              title="Show or hide illegal exclusion volumes"
+              onClick={() => setShowIllegal((v) => !v)}
+            >
               <i style={{ background: "#ef4444" }} /> illegal
-            </span>
+            </button>
             <span className="kv-swatch">
               <i style={{ background: "#7dd3fc" }} /> chassis pickup
             </span>

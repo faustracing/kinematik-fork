@@ -25,6 +25,10 @@ export interface SceneProps {
   selectedRegionId: string | null;
   severityByNode: Map<string, Severity>;
   refusedRegions: Set<string>;
+  /** Allowable volumes. On by default; they are the clamp envelopes. */
+  showAllowable: boolean;
+  /** Illegal exclusion volumes. Off by default — they swamp the car. */
+  showIllegal: boolean;
   tool: Tool;
   gizmoMode: GizmoMode;
   /** Node editing is suppressed while the sweep is scrubbed off its static pose. */
@@ -51,6 +55,8 @@ export function Scene(props: SceneProps) {
     selectedRegionId,
     severityByNode,
     refusedRegions,
+    showAllowable,
+    showIllegal,
     tool,
     gizmoMode,
     editingLocked,
@@ -76,9 +82,14 @@ export function Scene(props: SceneProps) {
   const editedRegion = selectedRegionId
     ? regions.find((r) => r.id === selectedRegionId)
     : undefined;
-  const visibleRegions = editedRegion
-    ? regions.filter((r) => r.id !== editedRegion.id)
-    : regions;
+  // The region under the gizmo is drawn by RegionGizmo, not here. A volume
+  // that just refused a drag is drawn even when its layer is hidden, so the
+  // yellow flash still explains the clamp.
+  const visibleRegions = regions.filter((region) => {
+    if (editedRegion && region.id === editedRegion.id) return false;
+    if (refusedRegions.has(region.id)) return true;
+    return region.allow ? showAllowable : showIllegal;
+  });
 
   return (
     <>
