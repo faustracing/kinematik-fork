@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Install spec for the constraint solver. Set the SOLVER_SPEC repository
+  # variable to something pip understands, e.g.
+  #   kinematics @ git+https://github.com/faustracing/suspension-explorer-core@v0.10.0
+  # Until it is set, the solver-dependent tests skip with a notice and the rest
+  # of the suite still runs. See README "Solver dependency".
+  SOLVER_SPEC: ${{ vars.SOLVER_SPEC }}
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install "ruff>=0.6"
+      - run: ruff check .
+      - run: ruff format --check .
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install the workbench
+        run: pip install -e ".[dev]"
+      - name: Install the constraint solver
+        if: env.SOLVER_SPEC != ''
+        run: pip install "${SOLVER_SPEC}"
+      - name: Warn when the solver is unavailable
+        if: env.SOLVER_SPEC == ''
+        run: |
+          echo "::warning title=Solver not installed::\
+          SOLVER_SPEC is unset, so the golden solver tests will skip. \
+          See README 'Solver dependency'."
+      - name: Run the test suite
+        run: pytest --cov=workbench --cov-report=term-missing
