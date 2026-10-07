@@ -51,6 +51,7 @@ __all__ = [
     "POINT_NAME_TO_NODE_ID",
     "FrameReport",
     "HardpointCsvError",
+    "design_from_points",
     "load_design",
     "read_points",
     "verify_frame",
@@ -410,7 +411,54 @@ def load_design(
             corner missing a required node.
     """
     path = Path(source)
-    points = read_points(path)
+    return design_from_points(
+        read_points(path),
+        name=name or path.stem,
+        car_defaults=car_defaults,
+        frame=frame,
+        normalise_datum=normalise_datum,
+        provenance={"source_file": path.name},
+    )
+
+
+def design_from_points(
+    points: Mapping[str, np.ndarray],
+    *,
+    name: str,
+    car_defaults: wb_defaults.CarDefaults = wb_defaults.GOLDEN_CAR,
+    frame: Frame | None = None,
+    normalise_datum: bool = True,
+    provenance: Mapping[str, object] | None = None,
+) -> Design:
+    """Assemble a `Design` from already-parsed hardpoints.
+
+    This is the half of `load_design` that is independent of the file format:
+    verify the frame, convert it if it is SAE, shift onto the design datum,
+    build both axles, and record what was measured against what was defaulted.
+    `workbench.io.hardpoint_import` reuses it so a spreadsheet import and a
+    CSV import cannot drift apart on frames, datums, or defaults.
+
+    Args:
+        points: `{"<corner>.<node_id>": xyz}` in the source's own frame and
+            datum, as produced by `read_points`.
+        name: Design name.
+        car_defaults: Tire, spring, mass, and synthesis-policy data for the
+            values a hardpoint file cannot carry.
+        frame: Force a source frame instead of detecting one. Detection is the
+            default and is strongly preferred.
+        normalise_datum: Shift coordinates so the front axle centreline is at
+            `X = 0` and the ground plane at `Z = 0`.
+        provenance: Extra provenance to merge in, e.g. where the points came
+            from. Format-independent provenance is added here.
+
+    Returns:
+        A `Design` with a front and a rear axle, both with explicit left and
+        right corners.
+
+    Raises:
+        HardpointCsvError: On a contradictory frame or a corner missing a
+            required node.
+    """
     report = verify_frame(points)
     source_frame = frame or report.frame
     if source_frame is Frame.SAE:
@@ -453,12 +501,12 @@ def load_design(
     )
     return Design(
         schema_version=SCHEMA_VERSION,
-        name=name or path.stem,
+        name=name,
         tire=tire,
         vehicle=vehicle,
         axles=axles,
         provenance={
-            "source_file": path.name,
+            **(provenance or {}),
             "source_frame": source_frame.value,
             "frame_evidence": list(report.evidence),
             "datum_shift_mm": (
